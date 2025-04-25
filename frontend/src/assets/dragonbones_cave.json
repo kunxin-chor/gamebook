@@ -131,12 +131,16 @@
                                 "stat": "mnd",
                                 "difficulty": 11,
                                 "margins": {
-                                    "success": {
-                                        "$set": {
-                                            "crack_spotted": true,
+                                    "success": [
+                                        {
+                                            "$set": {
+                                                "crack_spotted": true
+                                            }
+                                        },
+                                        {
                                             "$text": "You notice a crack in the wall!"
                                         }
-                                    },
+                                    ],
                                     "failure": {
                                         "$text": "You do not notice anything unusual."
                                     }
@@ -173,13 +177,13 @@
                     "label": "Attempt to Open",
                     "$visible": {
                         "$if": {
-                            "has_opened": false
+                            "$inventory.key": 1
                         }
                     },
                     "$do": [
                         {
                             "$if": {
-                                "has_key": true,
+                                "$inventory.key": 1,
                                 "$then": [
                                     {
                                         "$text": "The key flares with blue light! The door grinds open."
@@ -244,8 +248,7 @@
                                 "$then": [
                                     {
                                         "$set": {
-                                            "var": "hasKey",
-                                            "value": true
+                                            "$inventory.key": 1
                                         }
                                     },
                                     {

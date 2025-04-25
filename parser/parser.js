@@ -75,8 +75,9 @@ class GamebookParser {
             }
         }
         // Variable interpolation: replace ${var} with state[var]
-        text = text.replace(/\$\{(\w+)\}/g, (match, varName) => {
-            return this.state[varName] !== undefined ? this.state[varName] : 0;
+        text = text.replace(/\$\{([^}]+)\}/g, (match, varName) => {
+            const value = this.state[varName];
+            return value !== undefined ? value : 0;
         });
         return text;
     }
@@ -100,27 +101,27 @@ class GamebookParser {
         // Comparison operators
         if ('$lt' in cond) {
             const [a, b] = cond['$lt'];
-            return this.evalValue(a) < this.evalValue(b);
+            return this.evalValue(a, b) < this.evalValue(b, a);
         }
         if ('$lte' in cond) {
             const [a, b] = cond['$lte'];
-            return this.evalValue(a) <= this.evalValue(b);
+            return this.evalValue(a, b) <= this.evalValue(b, a);
         }
         if ('$gt' in cond) {
             const [a, b] = cond['$gt'];
-            return this.evalValue(a) > this.evalValue(b);
+            return this.evalValue(a, b) > this.evalValue(b, a);
         }
         if ('$gte' in cond) {
             const [a, b] = cond['$gte'];
-            return this.evalValue(a) >= this.evalValue(b);
+            return this.evalValue(a, b) >= this.evalValue(b, a);
         }
         if ('$eq' in cond) {
             const [a, b] = cond['$eq'];
-            return this.evalValue(a) === this.evalValue(b);
+            return this.evalValue(a, b) === this.evalValue(b, a);
         }
         if ('$neq' in cond) {
             const [a, b] = cond['$neq'];
-            return this.evalValue(a) !== this.evalValue(b);
+            return this.evalValue(a, b) !== this.evalValue(b, a);
         }
         // $random returns a float between 0 and 1
         if ('$random' in cond) {
@@ -129,16 +130,42 @@ class GamebookParser {
         }
         for (const key in cond) {
             if (key === '$then' || key === '$else') continue;
-            if (typeof cond[key] === 'boolean') {
-                if ((this.state[key] || false) !== cond[key]) return false;
+            if (typeof cond[key] !== 'object') {
+                let stateVal = this.state[key];
+                // If the condition is boolean, treat undefined as false
+                if (typeof cond[key] === 'boolean') {
+                    if (stateVal === undefined) stateVal = false;
+                }
+                // If the condition is number, treat undefined as 0
+                else if (typeof cond[key] === 'number') {
+                    if (stateVal === undefined) stateVal = 0;
+                }
+                // If the condition is string, treat undefined as ''
+                else if (typeof cond[key] === 'string') {
+                    if (stateVal === undefined) stateVal = '';
+                }
+                if (stateVal !== cond[key]) return false;
             }
         }
         return true;
     }
 
     // Helper to evaluate a value or nested condition
-    evalValue(val) {
+    evalValue(val, compareTo) {
         if (typeof val === 'object' && val !== null) {
+            // Variable reference: { $var: '...' }
+            if ('$var' in val) {
+                const key = val['$var'];
+                let stateVal = this.state[key];
+                if (typeof stateVal === 'undefined') {
+                    // Use compareTo type if provided for default value
+                    if (typeof compareTo === 'number') return 0;
+                    if (typeof compareTo === 'string') return '';
+                    if (typeof compareTo === 'boolean') return false;
+                    return 0; // fallback
+                }
+                return stateVal;
+            }
             // If it's a condition object, evaluate it
             return this.evalCondition(val);
         }
@@ -162,7 +189,12 @@ class GamebookParser {
                     output += result.rollMessage + '\n';
                     // Handle margin branching if present
                     if (params.margins && params.margins[result.result]) {
-                        output += this.performActions([params.margins[result.result]]);
+                        const branch = params.margins[result.result];
+                        if (Array.isArray(branch)) {
+                            output += this.performActions(branch);
+                        } else {
+                            output += this.performActions([branch]);
+                        }
                     }
                 } else {
                     output += result;

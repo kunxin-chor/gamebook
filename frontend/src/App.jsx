@@ -33,13 +33,8 @@ function App() {
     const newNodeId = parser.currentNode.id;
     const entries = [];
 
-    let displayOutput = output;
-    if (output && typeof output === 'object' && output.rollMessage) {
-      displayOutput = output.rollMessage;
-      if (output.outcome) displayOutput += '\n' + output.outcome;
-    }
-    if (displayOutput && displayOutput.trim()) {
-      entries.push({ actionLabel: action.label, output: displayOutput });
+    if (output && output.trim()) {
+      entries.push({ actionLabel: action.label, output });
     }
     if (newNodeId !== prevNodeId) {
       entries.push({ node: parser.currentNode, text: parser.getText() });
@@ -113,14 +108,9 @@ function App() {
     const match = node.interactions.find(intx => intx.type === '$examine' && intx.entity === entity);
     if (match) {
       const output = parser.performActions(match.actions);
-      let displayOutput = output;
-      if (output && typeof output === 'object' && output.rollMessage) {
-        displayOutput = output.rollMessage;
-        if (output.outcome) displayOutput += '\n' + output.outcome;
-      }
       setHistory(prev => [
         ...prev,
-        { actionLabel: `Examine ${entity}`, output: displayOutput }
+        { actionLabel: `Examine ${entity}`, output }
       ]);
     } else {
       setHistory(prev => [

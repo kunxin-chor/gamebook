@@ -49,7 +49,7 @@ export function gotoHandler(context, params) {
 export function textHandler(context, params) {
   // Variable interpolation: replace ${var} with context.state[var]
   if (typeof params === 'string') {
-    params = params.replace(/\$\{(\w+)\}/g, (match, varName) => {
+    params = params.replace(/\$\{([^}]+)\}/g, (match, varName) => {
       return context.state[varName] !== undefined ? context.state[varName] : 0;
     });
   }
