@@ -1,0 +1,148 @@
+[
+    {
+        "id": 1,
+        "title": "Dragonbones Cave",
+        "text": {
+            "$default": "The Dragonbones Cave system in the Tollrock Mountains holds the legacy of a fearsome dragon. Though centuries have passed since its death, the creature's legendary hoard remains undiscovered - only scattered bones and rumors linger.",
+            "$concat": [
+                {
+                    "$if": {
+                        "visited": true,
+                        "$then": " The torchlight dances across ancient claw marks on the walls."
+                    }
+                }
+            ]
+        },
+        "actions": [
+            {
+                "id": "start",
+                "label": "Enter Cave",
+                "$do": [
+                    {"$set": {"visited": true}},
+                    {"$goto": 2}
+                ]
+            }
+        ]
+    },
+    {
+        "id": 2,
+        "title": "Entrance Chamber",
+        "text": {
+            "$default": "Your torch reveals a cavern with rough-hewn walls. Thick sand muffles sound. Three paths emerge: north to a carved door, east to a narrow tunnel, and south to the cave mouth.",
+            "$concat": [
+                {
+                    "$if": {
+                        "has_opened": true, 
+                        "$then": " A cold draft flows from the north."
+                    }
+                }
+            ]
+        },
+        "actions": [
+            {
+                "id": "north",
+                "label": "Approach Northern Door",
+                "$visible": {
+                    "$if": {"$or": [{"has_opened": false}, {"has_opened": true}]}
+                },
+                "$do": [
+                    {"$goto": 3}
+                ]
+            },
+            {
+                "id": "east",
+                "label": "Enter Eastern Tunnel",
+                "$do": [
+                    {"$goto": 4}
+                ]
+            }
+        ]
+    },
+    {
+        "id": 3,
+        "title": "Sealed Door",
+        "text": {
+            "$default": "A massive stone door blocks your path. Intricate dragon motifs cover its surface.",
+            "$concat": [
+                {
+                    "$if": {
+                        "has_opened": false,
+                        "$then": " A key-shaped depression glows faintly at its center."
+                    }
+                },
+                {
+                    "$if": {
+                        "has_opened": true,
+                        "$then": " The door stands slightly ajar, revealing darkness beyond."
+                    }
+                }
+            ]
+        },
+        "actions": [
+            {
+                "id": "unlock",
+                "label": "Attempt to Open",
+                "$visible": {
+                    "$if": {"has_opened": false}
+                },
+                "$do": [
+                    {
+                        "$if": {
+                            "has_key": true,
+                            "$then": [
+                                {"$text": "The key flares with blue light! The door grinds open."},
+                                {"$set": {"has_opened": true}}
+                            ],
+                            "$else": [
+                                {"$text": "The door pulses red at your touch. A key is required."}
+                            ]
+                        }
+                    }
+                ]
+            },
+            {
+                "id": "return",
+                "label": "Return to Entrance",
+                "$do": [
+                    {"$goto": 2}
+                ]
+            }
+        ]
+    },
+    {
+        "id": 4,
+        "title": "Fountain Chamber",
+        "text": {
+            "$default": "You enter a circular chamber with polished obsidian walls. A dry fountain dominates the space.",
+            "$concat": [
+                {
+                    "$if": {
+                        "has_key": false,
+                        "$then": " A skeletal hand protrudes from the basin, clutching an iron key."
+                    }
+                }
+            ]
+        },
+        "actions": [
+            {
+                "id": "take_key",
+                "label": "Take Key",
+                "$visible": {
+                    "$if": {"has_key": false}
+                },
+                "$do": [
+                    {"$text": "You pry the key free. It hums with arcane energy."},
+                    {"$set": {"has_key": true}},
+          
+                ]
+            },
+            {
+                "id": "west",
+                "label": "Return West",
+                "$do": [
+                    {"$goto": 2}
+                ]
+            }
+        ]
+    }
+]
