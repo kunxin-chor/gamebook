@@ -1,10 +1,18 @@
 // parser.js
 // Loads and interprets the gamebook JSON script
+import { ActionHandlerRegistry, setHandler, gotoHandler, textHandler, ifHandler } from './actionHandlers.js';
+
 class GamebookParser {
     constructor(data) {
         this.data = data;
         this.state = {};
         this.currentNode = null;
+        this.actionHandlers = new ActionHandlerRegistry();
+        // Register built-in handlers
+        this.actionHandlers.register('$set', setHandler);
+        this.actionHandlers.register('$goto', gotoHandler);
+        this.actionHandlers.register('$text', textHandler);
+        this.actionHandlers.register('$if', ifHandler);
     }
 
     start() {
@@ -57,29 +65,18 @@ class GamebookParser {
     performActions(doArr) {
         let output = '';
         for (const act of doArr) {
-            if (act['$set']) {
-                Object.assign(this.state, act['$set']);
-            } else if (act['$goto']) {
-                this.goto(act['$goto']);
-            } else if (act['$text']) {
-                output += act['$text'] + '\n';
-            } else if (act['$if']) {
-                if (this.evalCondition(act['$if'])) {
-                    if (Array.isArray(act['$if']['$then'])) {
-                        output += this.performActions(act['$if']['$then']);
-                    } else if (act['$if']['$then']) {
-                        output += act['$if']['$then'] + '\n';
-                    }
-                } else if (act['$if']['$else']) {
-                    if (Array.isArray(act['$if']['$else'])) {
-                        output += this.performActions(act['$if']['$else']);
-                    } else if (act['$if']['$else']) {
-                        output += act['$if']['$else'] + '\n';
-                    }
+            for (const key in act) {
+                const handler = this.actionHandlers.get(key);
+                if (handler) {
+                    output += handler(this, act[key]);
                 }
             }
         }
         return output;
+    }
+
+    registerActionHandler(type, handler) {
+        this.actionHandlers.register(type, handler);
     }
 }
 
