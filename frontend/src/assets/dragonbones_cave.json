@@ -176,25 +176,25 @@
         "id": 5,
         "title": "Coin Pool",
         "text": {
-            "$default": "You find a shimmering pool filled with gold coins. Your reflection stares back, clutching a handful of treasure. You currently have ${coins} coins in your pouch."
+            "$default": "You find a shimmering pool filled with gold coins. Your reflection stares back, clutching a handful of treasure. You currently have ${$inventory.coin} coins in your pouch."
         },
         "actions": [
             {
                 "id": "take_coin",
                 "label": "Take Coin",
-                "$visible": { "$if": { "$lt": [ { "$var": "coins" }, 10 ] } },
+                "$visible": { "$if": { "$lt": [ { "$var": "$inventory.coin" }, 10 ] } },
                 "$do": [
-                    { "$inc": { "var": "coins", "amount": 1 } },
-                    { "$text": "You scoop up a coin! You now have ${coins} coins." }
+                    { "$inc": { "var": "$inventory.coin", "amount": 1 } },
+                    { "$text": "You scoop up a coin! You now have ${$inventory.coin} coins." }
                 ]
             },
             {
                 "id": "drop_coin",
                 "label": "Drop Coin",
-                "$visible": { "$if": { "$gt": [ { "$var": "coins" }, 0 ] } },
+                "$visible": { "$if": { "$gt": [ { "$var": "$inventory.coin" }, 0 ] } },
                 "$do": [
-                    { "$dec": { "var": "coins", "amount": 1 } },
-                    { "$text": "You drop a coin back into the pool. You now have ${coins} coins." }
+                    { "$dec": { "var": "$inventory.coin", "amount": 1 } },
+                    { "$text": "You drop a coin into the pool. You now have ${$inventory.coin} coins." }
                 ]
             },
             {

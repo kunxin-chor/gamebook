@@ -3,6 +3,14 @@
 import { ActionHandlerRegistry, setHandler, incHandler, decHandler, gotoHandler, textHandler, ifHandler } from './actionHandlers.js';
 
 class GamebookParser {
+    // ... existing code ...
+    getInventory() {
+        // Return array of { name, value } for inventory items
+        return Object.entries(this.state)
+            .filter(([key, value]) => key.startsWith('$inventory.') && ((typeof value === 'number' && value > 0) || (typeof value === 'boolean' && value) || (typeof value === 'string' && value)))
+            .map(([key, value]) => ({ name: key.replace('$inventory.', ''), value }));
+    }
+
     constructor(data) {
         this.data = data;
         this.state = {};
