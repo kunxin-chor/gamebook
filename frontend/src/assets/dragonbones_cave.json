@@ -28,7 +28,7 @@
         "id": 2,
         "title": "Entrance Chamber",
         "text": {
-            "$default": "Your torch reveals a cavern with rough-hewn walls. Thick sand muffles sound. Three paths emerge: north to a carved door, east to a narrow tunnel, and south to the cave mouth.",
+            "$default": "Your torch reveals a cavern with rough-hewn walls. Thick sand muffles sound. Three paths emerge: north to a carved door, east to a narrow tunnel, and south to the cave mouth. There's a crack in the west wall.",
             "$concat": [
                 {
                     "$if": {
@@ -54,6 +54,24 @@
                 "label": "Enter Eastern Tunnel",
                 "$do": [
                     {"$goto": 4}
+                ]
+            },
+            {
+                "id": "west",
+                "label": "Go through the crack in the wall",
+                "$do": [
+                    {
+                        "$if": {
+                            "$lt": [ { "$random": 1 }, 0.4 ],
+                            "$then": [
+                                { "$text": "You squeeze through the crack and find yourself in a hidden chamber!" },
+                                { "$goto": 5 }
+                            ],
+                            "$else": [
+                                { "$text": "You get stuck in the narrow passage! With some effort, you wriggle back out. Maybe try again?" }
+                            ]
+                        }
+                    }
                 ]
             }
         ]
@@ -131,8 +149,18 @@
                     "$if": {"has_key": false}
                 },
                 "$do": [
-                    {"$text": "You pry the key free. It hums with arcane energy."},
-                    {"$set": {"has_key": true}}
+                    {
+                        "$if": {
+                            "$lt": [ { "$random": 1 }, 0.3 ],
+                            "$then": [
+                                { "$text": "You pry the key free. It hums with arcane energy." },
+                                { "$set": { "has_key": true } }
+                            ],
+                            "$else": [
+                                { "$text": "You tug at the key, but it doesn't budge. Try again!" }
+                            ]
+                        }
+                    }
                 ]
             },
             {
@@ -141,6 +169,38 @@
                 "$do": [
                     {"$goto": 2}
                 ]
+            }
+        ]
+    },
+    {
+        "id": 5,
+        "title": "Coin Pool",
+        "text": {
+            "$default": "You find a shimmering pool filled with gold coins. Your reflection stares back, clutching a handful of treasure. You currently have ${coins} coins in your pouch."
+        },
+        "actions": [
+            {
+                "id": "take_coin",
+                "label": "Take Coin",
+                "$visible": { "$if": { "$lt": [ { "$var": "coins" }, 10 ] } },
+                "$do": [
+                    { "$inc": { "var": "coins", "amount": 1 } },
+                    { "$text": "You scoop up a coin! You now have ${coins} coins." }
+                ]
+            },
+            {
+                "id": "drop_coin",
+                "label": "Drop Coin",
+                "$visible": { "$if": { "$gt": [ { "$var": "coins" }, 0 ] } },
+                "$do": [
+                    { "$dec": { "var": "coins", "amount": 1 } },
+                    { "$text": "You drop a coin back into the pool. You now have ${coins} coins." }
+                ]
+            },
+            {
+                "id": "leave",
+                "label": "Leave the Pool",
+                "$do": [ { "$goto": 2 } ]
             }
         ]
     }

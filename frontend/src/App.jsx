@@ -21,14 +21,15 @@ function App() {
   const actions = parser.getActions();
 
   function handleAction(action) {
+    const prevNodeId = parser.currentNode.id;
     const output = parser.performActions(action['$do'] || []);
-    const hasGoto = action['$do'] && action['$do'].some(act => act['$goto']);
+    const newNodeId = parser.currentNode.id;
     const entries = [];
 
     if (output && output.trim()) {
       entries.push({ actionLabel: action.label, output });
     }
-    if (hasGoto) {
+    if (newNodeId !== prevNodeId) {
       entries.push({ node: parser.currentNode, text: parser.getText() });
     }
     if (entries.length > 0) {

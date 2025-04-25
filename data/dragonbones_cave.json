@@ -131,9 +131,18 @@
                     "$if": {"has_key": false}
                 },
                 "$do": [
-                    {"$text": "You pry the key free. It hums with arcane energy."},
-                    {"$set": {"has_key": true}},
-          
+                    {
+                        "$if": {
+                            "$lt": [ { "$random": 1 }, 0.3 ],
+                            "$then": [
+                                { "$text": "You pry the key free. It hums with arcane energy." },
+                                { "$set": { "has_key": true } }
+                            ],
+                            "$else": [
+                                { "$text": "You tug at the key, but it doesn't budge. Try again!" }
+                            ]
+                        }
+                    }
                 ]
             },
             {

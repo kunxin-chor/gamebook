@@ -15,7 +15,29 @@ export class ActionHandlerRegistry {
 
 // Built-in handlers
 export function setHandler(context, params) {
-  Object.assign(context.state, params);
+  // Support setting numbers, strings, booleans
+  Object.entries(params).forEach(([key, value]) => {
+    context.state[key] = value;
+  });
+  return '';
+}
+
+export function incHandler(context, params) {
+  // params: { var: 'coins', amount: 1 }
+  const key = params.var;
+  const amt = params.amount || 1;
+  if (typeof context.state[key] !== 'number') context.state[key] = 0;
+  context.state[key] += amt;
+  return '';
+}
+
+export function decHandler(context, params) {
+  // params: { var: 'coins', amount: 1 }
+  const key = params.var;
+  const amt = params.amount || 1;
+  if (typeof context.state[key] !== 'number') context.state[key] = 0;
+  context.state[key] -= amt;
+  if (context.state[key] < 0) context.state[key] = 0;
   return '';
 }
 
@@ -25,6 +47,12 @@ export function gotoHandler(context, params) {
 }
 
 export function textHandler(context, params) {
+  // Variable interpolation: replace ${var} with context.state[var]
+  if (typeof params === 'string') {
+    params = params.replace(/\$\{(\w+)\}/g, (match, varName) => {
+      return context.state[varName] !== undefined ? context.state[varName] : 0;
+    });
+  }
   return params + '\n';
 }
 
