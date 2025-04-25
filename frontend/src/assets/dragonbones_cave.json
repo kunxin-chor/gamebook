@@ -18,8 +18,14 @@
                 "id": "start",
                 "label": "Enter Cave",
                 "$do": [
-                    {"$set": {"visited": true}},
-                    {"$goto": 2}
+                    {
+                        "$set": {
+                            "visited": true
+                        }
+                    },
+                    {
+                        "$goto": 2
+                    }
                 ]
             }
         ]
@@ -32,7 +38,7 @@
             "$concat": [
                 {
                     "$if": {
-                        "has_opened": true, 
+                        "has_opened": true,
                         "$then": " A cold draft flows from the north."
                     }
                 }
@@ -43,17 +49,30 @@
                 "id": "north",
                 "label": "Approach Northern Door",
                 "$visible": {
-                    "$if": {"$or": [{"has_opened": false}, {"has_opened": true}]}
+                    "$if": {
+                        "$or": [
+                            {
+                                "has_opened": false
+                            },
+                            {
+                                "has_opened": true
+                            }
+                        ]
+                    }
                 },
                 "$do": [
-                    {"$goto": 3}
+                    {
+                        "$goto": 3
+                    }
                 ]
             },
             {
                 "id": "east",
                 "label": "Enter Eastern Tunnel",
                 "$do": [
-                    {"$goto": 4}
+                    {
+                        "$goto": 4
+                    }
                 ]
             },
             {
@@ -62,13 +81,24 @@
                 "$do": [
                     {
                         "$if": {
-                            "$lt": [ { "$random": 1 }, 0.4 ],
+                            "$lt": [
+                                {
+                                    "$random": 1
+                                },
+                                0.4
+                            ],
                             "$then": [
-                                { "$text": "You squeeze through the crack and find yourself in a hidden chamber!" },
-                                { "$goto": 5 }
+                                {
+                                    "$text": "You squeeze through the crack and find yourself in a hidden chamber!"
+                                },
+                                {
+                                    "$goto": 5
+                                }
                             ],
                             "$else": [
-                                { "$text": "You get stuck in the narrow passage! With some effort, you wriggle back out. Maybe try again?" }
+                                {
+                                    "$text": "You get stuck in the narrow passage! With some effort, you wriggle back out. Maybe try again?"
+                                }
                             ]
                         }
                     }
@@ -101,18 +131,28 @@
                 "id": "unlock",
                 "label": "Attempt to Open",
                 "$visible": {
-                    "$if": {"has_opened": false}
+                    "$if": {
+                        "has_opened": false
+                    }
                 },
                 "$do": [
                     {
                         "$if": {
                             "has_key": true,
                             "$then": [
-                                {"$text": "The key flares with blue light! The door grinds open."},
-                                {"$set": {"has_opened": true}}
+                                {
+                                    "$text": "The key flares with blue light! The door grinds open."
+                                },
+                                {
+                                    "$set": {
+                                        "has_opened": true
+                                    }
+                                }
                             ],
                             "$else": [
-                                {"$text": "The door pulses red at your touch. A key is required."}
+                                {
+                                    "$text": "The door pulses red at your touch. A key is required."
+                                }
                             ]
                         }
                     }
@@ -122,7 +162,9 @@
                 "id": "return",
                 "label": "Return to Entrance",
                 "$do": [
-                    {"$goto": 2}
+                    {
+                        "$goto": 2
+                    }
                 ]
             }
         ]
@@ -130,44 +172,52 @@
     {
         "id": 4,
         "title": "Fountain Chamber",
+        "entities": [
+            "Skeletal Arm"
+        ],
         "text": {
             "$default": "You enter a circular chamber with polished obsidian walls. A dry fountain dominates the space.",
             "$concat": [
                 {
                     "$if": {
-                        "has_key": false,
+                        "hasKey": false,
                         "$then": " A skeletal hand protrudes from the basin, clutching an iron key."
                     }
                 }
             ]
         },
-        "actions": [
+        "interactions": [
             {
-                "id": "take_key",
-                "label": "Take Key",
-                "$visible": {
-                    "$if": {"has_key": false}
-                },
-                "$do": [
-                    {
-                        "$if": {
-                            "$lt": [ { "$random": 1 }, 0.3 ],
-                            "$then": [
-                                { "$text": "You pry the key free. It hums with arcane energy." },
-                                { "$set": { "has_key": true } }
-                            ],
-                            "$else": [
-                                { "$text": "You tug at the key, but it doesn't budge. Try again!" }
-                            ]
-                        }
-                    }
-                ]
-            },
+                "type": "$give",
+                "entity": "Skeletal Arm",
+                "item": "coin",
+                "actions": [
+  {
+    "$if": {
+      "$gt": [ { "$var": "$inventory.coin" }, 0 ],
+      "$then": [
+        { "$set": { "var": "hasKey", "value": true } },
+        { "$dec": { "var": "$inventory.coin", "amount": 1 } },
+        { "$text": "The skeletal arm closes around the coin and offers you a rusty key in return!" }
+      ],
+      "$else": [
+        { "$text": "You have no coins to give." }
+      ]
+    }
+  }
+]
+            }
+        ],
+        "comments": "The key can only be obtained by giving a coin to the Skeletal Arm via the $give interaction.",
+        "actions": [
+           
             {
                 "id": "west",
                 "label": "Return West",
                 "$do": [
-                    {"$goto": 2}
+                    {
+                        "$goto": 2
+                    }
                 ]
             }
         ]
@@ -182,25 +232,61 @@
             {
                 "id": "take_coin",
                 "label": "Take Coin",
-                "$visible": { "$if": { "$lt": [ { "$var": "$inventory.coin" }, 10 ] } },
+                "$visible": {
+                    "$if": {
+                        "$lt": [
+                            {
+                                "$var": "$inventory.coin"
+                            },
+                            10
+                        ]
+                    }
+                },
                 "$do": [
-                    { "$inc": { "var": "$inventory.coin", "amount": 1 } },
-                    { "$text": "You scoop up a coin! You now have ${$inventory.coin} coins." }
+                    {
+                        "$inc": {
+                            "var": "$inventory.coin",
+                            "amount": 1
+                        }
+                    },
+                    {
+                        "$text": "You scoop up a coin! You now have ${$inventory.coin} coins."
+                    }
                 ]
             },
             {
                 "id": "drop_coin",
                 "label": "Drop Coin",
-                "$visible": { "$if": { "$gt": [ { "$var": "$inventory.coin" }, 0 ] } },
+                "$visible": {
+                    "$if": {
+                        "$gt": [
+                            {
+                                "$var": "$inventory.coin"
+                            },
+                            0
+                        ]
+                    }
+                },
                 "$do": [
-                    { "$dec": { "var": "$inventory.coin", "amount": 1 } },
-                    { "$text": "You drop a coin into the pool. You now have ${$inventory.coin} coins." }
+                    {
+                        "$dec": {
+                            "var": "$inventory.coin",
+                            "amount": 1
+                        }
+                    },
+                    {
+                        "$text": "You drop a coin into the pool. You now have ${$inventory.coin} coins."
+                    }
                 ]
             },
             {
                 "id": "leave",
                 "label": "Leave the Pool",
-                "$do": [ { "$goto": 2 } ]
+                "$do": [
+                    {
+                        "$goto": 2
+                    }
+                ]
             }
         ]
     }

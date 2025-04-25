@@ -1,6 +1,8 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { createGamebookParser } from './parser.js';
 import InventorySidebar from './components/InventorySidebar';
+import InteractionsSidebar from './components/InteractionsSidebar';
+import GiveDialog from './components/GiveDialog';
 import GameHistory from './components/GameHistory';
 import ActionButtons from './components/ActionButtons';
 
@@ -43,14 +45,69 @@ function App() {
 
   const inventory = parser.getInventory();
 
+  // Supported interaction types
+  const INTERACTION_TYPES = [
+    { type: '$give', label: 'Give' },
+    { type: '$speak', label: 'Speak' },
+    { type: '$use', label: 'Use' },
+    { type: '$examine', label: 'Examine' }
+  ];
+
+  // Get current node entities (for dialog options)
+  const entities = parser.currentNode && parser.currentNode.entities ? parser.currentNode.entities : [];
+
+  // GIVE dialog state
+  const [showGiveDialog, setShowGiveDialog] = useState(false);
+
+  function handleTriggerInteraction(interactionType) {
+    if (interactionType === '$give') {
+      setShowGiveDialog(true);
+    } else {
+      alert(`Interaction type '${interactionType}' is not implemented yet.`);
+    }
+  }
+
+  function handleGive(item, entity) {
+    setShowGiveDialog(false);
+    // Find matching $give interaction in current node
+    const node = parser.currentNode;
+    if (!node || !node.interactions) return;
+    const match = node.interactions.find(intx => intx.type === '$give' && intx.entity === entity && intx.item === item);
+    if (match) {
+      const output = parser.performActions(match.actions);
+      setHistory(prev => [
+        ...prev,
+        { actionLabel: `Give ${item} to ${entity}`, output }
+      ]);
+    } else {
+      setHistory(prev => [
+        ...prev,
+        { actionLabel: `Give ${item} to ${entity}`, output: `Nothing happens.` }
+      ]);
+    }
+  }
+
   return (
     <div style={{ display: 'flex', flexDirection: 'row', maxWidth: 900, margin: '40px auto', fontFamily: 'serif' }}>
-      <InventorySidebar inventory={inventory} />
+      <div>
+        <InventorySidebar inventory={inventory} />
+        <InteractionsSidebar
+          interactionTypes={INTERACTION_TYPES}
+          onTrigger={handleTriggerInteraction}
+        />
+      </div>
       <div style={{ flex: 1, background: '#1a1a1a', color: '#f6f6f6', borderRadius: 12, boxShadow: '0 2px 12px #000a', padding: 24 }}>
         <h1 style={{ textAlign: 'center', letterSpacing: 2, marginBottom: 24 }}>Dragonbones Cave</h1>
         <GameHistory history={history} />
         <ActionButtons actions={actions} onAction={handleAction} />
       </div>
+      <GiveDialog
+        open={showGiveDialog}
+        onClose={() => setShowGiveDialog(false)}
+        inventory={inventory}
+        entities={entities}
+        onGive={handleGive}
+      />
     </div>
   );
 }
