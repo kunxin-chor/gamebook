@@ -5,8 +5,8 @@ import gamebookData from './assets/dragonbones_cave.json';
 export function createGamebookParser(initialState = {}) {
   // Provide a clean instance for each session
   const parser = new GamebookParser(gamebookData);
-  parser.state = { ...initialState };
-  parser.currentNode = parser.data.find(n => n.id === 1);
+  parser.state = { ...parser.state, ...initialState };
+  parser.start(); // sets currentNode to id 1
   return parser;
 }
 

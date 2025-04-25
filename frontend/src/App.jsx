@@ -1,16 +1,17 @@
 import React, { useEffect, useState, useRef } from 'react';
+import gamebookData from './assets/dragonbones_cave.json';
 import { createGamebookParser } from './parser.js';
 import InventorySidebar from './components/InventorySidebar';
 import InteractionsSidebar from './components/InteractionsSidebar';
 import GiveDialog from './components/GiveDialog';
 import GameHistory from './components/GameHistory';
 import ActionButtons from './components/ActionButtons';
+import CharacterSidebar from './components/CharacterSidebar';
 
 
 
 function App() {
-  const parserRef = useRef(createGamebookParser());
-  const parser = parserRef.current;
+  const parser = useRef(createGamebookParser(gamebookData)).current;
   const scrollRef = useRef(null);
 
   const [history, setHistory] = useState([
@@ -87,8 +88,11 @@ function App() {
     }
   }
 
+  // Use parser.getCharacterStats() for live character stats
+  const character = parser.getCharacterStats();
+
   return (
-    <div style={{ display: 'flex', flexDirection: 'row', maxWidth: 900, margin: '40px auto', fontFamily: 'serif' }}>
+    <div style={{ display: 'flex', flexDirection: 'row', maxWidth: 1200, margin: '40px auto', fontFamily: 'serif' }}>
       <div>
         <InventorySidebar inventory={inventory} />
         <InteractionsSidebar
@@ -101,6 +105,7 @@ function App() {
         <GameHistory history={history} />
         <ActionButtons actions={actions} onAction={handleAction} />
       </div>
+      <CharacterSidebar character={character} />
       <GiveDialog
         open={showGiveDialog}
         onClose={() => setShowGiveDialog(false)}

@@ -11,6 +11,16 @@ class GamebookParser {
             .map(([key, value]) => ({ name: key.replace('$inventory.', ''), value }));
     }
 
+    getCharacterStats() {
+        // Return object of { str, agi, mnd, spr }
+        return {
+            str: this.state['$character.str'] || 0,
+            agi: this.state['$character.agi'] || 0,
+            mnd: this.state['$character.mnd'] || 0,
+            spr: this.state['$character.spr'] || 0
+        };
+    }
+
     constructor(data) {
         this.data = data;
         this.state = {};
@@ -23,6 +33,13 @@ class GamebookParser {
         this.actionHandlers.register('$goto', gotoHandler);
         this.actionHandlers.register('$text', textHandler);
         this.actionHandlers.register('$if', ifHandler);
+
+        // Load character variables if present
+        if (data.character && data.character.variables) {
+            Object.entries(data.character.variables).forEach(([key, value]) => {
+                this.state[key] = value;
+            });
+        }
     }
 
     start() {
@@ -30,7 +47,8 @@ class GamebookParser {
     }
 
     goto(id) {
-        const node = this.data.find(n => n.id === id);
+        // nodes are now in data.nodes
+        const node = (this.data.nodes || []).find(n => n.id === id);
         if (!node) throw new Error(`Node with id ${id} not found`);
         this.currentNode = node;
     }
