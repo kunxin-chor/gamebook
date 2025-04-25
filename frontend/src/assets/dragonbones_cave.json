@@ -177,7 +177,14 @@
                     "label": "Attempt to Open",
                     "$visible": {
                         "$if": {
-                            "$inventory.key": 1
+                            "$and": [
+                                {
+                                    "$inventory.key": 1
+                                },
+                                {
+                                    "has_opened": false
+                                }
+                            ]
                         }
                     },
                     "$do": [
