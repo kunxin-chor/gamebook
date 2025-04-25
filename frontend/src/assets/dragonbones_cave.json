@@ -89,6 +89,11 @@
                 {
                     "id": "west",
                     "label": "Go through the crack in the wall",
+                    "$visible": {
+                        "$if": {
+                            "crack_spotted": true
+                        }
+                    },
                     "$do": [
                         {
                             "$if": {
@@ -111,6 +116,31 @@
                                         "$text": "You get stuck in the narrow passage! With some effort, you wriggle back out. Maybe try again?"
                                     }
                                 ]
+                            }
+                        }
+                    ]
+                }
+            ],
+            "interactions": [
+                {
+                    "type": "$examine",
+                    "entity": "Wall",
+                    "actions": [
+                        {
+                            "$ability_check": {
+                                "stat": "mnd",
+                                "difficulty": 11,
+                                "margins": {
+                                    "success": {
+                                        "$set": {
+                                            "crack_spotted": true,
+                                            "$text": "You notice a crack in the wall!"
+                                        }
+                                    },
+                                    "failure": {
+                                        "$text": "You do not notice anything unusual."
+                                    }
+                                }
                             }
                         }
                     ]

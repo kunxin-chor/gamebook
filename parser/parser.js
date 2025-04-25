@@ -1,6 +1,8 @@
 // parser.js
 // Loads and interprets the gamebook JSON script
-import { ActionHandlerRegistry, setHandler, incHandler, decHandler, gotoHandler, textHandler, ifHandler } from './actionHandlers.js';
+import { ActionHandlerRegistry, setHandler, abilityCheckHandler, incHandler, decHandler, gotoHandler, textHandler, ifHandler } from './actionHandlers.js';
+
+
 
 class GamebookParser {
     // ... existing code ...
@@ -26,6 +28,15 @@ class GamebookParser {
         this.state = {};
         this.currentNode = null;
         this.actionHandlers = new ActionHandlerRegistry();
+
+        // Load Character
+        // Load character variables if present
+        if (data.character && data.character.variables) {
+            Object.entries(data.character.variables).forEach(([key, value]) => {
+                this.state[key] = value;
+            });
+        }
+
         // Register built-in handlers
         this.actionHandlers.register('$set', setHandler);
         this.actionHandlers.register('$inc', incHandler);
@@ -34,12 +45,8 @@ class GamebookParser {
         this.actionHandlers.register('$text', textHandler);
         this.actionHandlers.register('$if', ifHandler);
 
-        // Load character variables if present
-        if (data.character && data.character.variables) {
-            Object.entries(data.character.variables).forEach(([key, value]) => {
-                this.state[key] = value;
-            });
-        }
+        this.actionHandlers.register('$ability_check', abilityCheckHandler);
+
     }
 
     start() {
@@ -138,14 +145,30 @@ class GamebookParser {
         return val;
     }
 
-    performActions(doArr) {
+    performActions(actions) {
+        if (!Array.isArray(actions)) actions = [actions];
         let output = '';
-        for (const act of doArr) {
-            for (const key in act) {
-                const handler = this.actionHandlers.get(key);
-                if (handler) {
-                    output += handler(this, act[key]);
+        for (const action of actions) {
+            if (typeof action === 'string') {
+                // ... legacy string action ...
+                continue;
+            }
+            const key = Object.keys(action)[0];
+            const params = action[key];
+            const handler = this.actionHandlers.get(key);
+            if (handler) {
+                const result = handler(this, params);
+                if (key === '$ability_check' && result && typeof result === 'object' && result.rollMessage) {
+                    output += result.rollMessage + '\n';
+                    // Handle margin branching if present
+                    if (params.margins && params.margins[result.result]) {
+                        output += this.performActions([params.margins[result.result]]);
+                    }
+                } else {
+                    output += result;
                 }
+            } else {
+                // ... handle unknown action ...
             }
         }
         return output;

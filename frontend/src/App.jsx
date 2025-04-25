@@ -5,6 +5,7 @@ import InventorySidebar from './components/InventorySidebar';
 import InteractionsSidebar from './components/InteractionsSidebar';
 import GiveDialog from './components/GiveDialog';
 import GameHistory from './components/GameHistory';
+import ExamineDialog from './components/ExamineDialog';
 import ActionButtons from './components/ActionButtons';
 import CharacterSidebar from './components/CharacterSidebar';
 
@@ -32,8 +33,13 @@ function App() {
     const newNodeId = parser.currentNode.id;
     const entries = [];
 
-    if (output && output.trim()) {
-      entries.push({ actionLabel: action.label, output });
+    let displayOutput = output;
+    if (output && typeof output === 'object' && output.rollMessage) {
+      displayOutput = output.rollMessage;
+      if (output.outcome) displayOutput += '\n' + output.outcome;
+    }
+    if (displayOutput && displayOutput.trim()) {
+      entries.push({ actionLabel: action.label, output: displayOutput });
     }
     if (newNodeId !== prevNodeId) {
       entries.push({ node: parser.currentNode, text: parser.getText() });
@@ -59,10 +65,14 @@ function App() {
 
   // GIVE dialog state
   const [showGiveDialog, setShowGiveDialog] = useState(false);
+  // EXAMINE dialog state
+  const [showExamineDialog, setShowExamineDialog] = useState(false);
 
   function handleTriggerInteraction(interactionType) {
     if (interactionType === '$give') {
       setShowGiveDialog(true);
+    } else if (interactionType === '$examine') {
+      setShowExamineDialog(true);
     } else {
       alert(`Interaction type '${interactionType}' is not implemented yet.`);
     }
@@ -91,6 +101,35 @@ function App() {
   // Use parser.getCharacterStats() for live character stats
   const character = parser.getCharacterStats();
 
+  // Find all entities with $examine interactions in the current node
+  const examineEntities = (parser.currentNode && parser.currentNode.interactions)
+    ? parser.currentNode.interactions.filter(i => i.type === '$examine').map(i => i.entity)
+    : [];
+
+  function handleExamine(entity) {
+    setShowExamineDialog(false);
+    const node = parser.currentNode;
+    if (!node || !node.interactions) return;
+    const match = node.interactions.find(intx => intx.type === '$examine' && intx.entity === entity);
+    if (match) {
+      const output = parser.performActions(match.actions);
+      let displayOutput = output;
+      if (output && typeof output === 'object' && output.rollMessage) {
+        displayOutput = output.rollMessage;
+        if (output.outcome) displayOutput += '\n' + output.outcome;
+      }
+      setHistory(prev => [
+        ...prev,
+        { actionLabel: `Examine ${entity}`, output: displayOutput }
+      ]);
+    } else {
+      setHistory(prev => [
+        ...prev,
+        { actionLabel: `Examine ${entity}`, output: `You find nothing unusual.` }
+      ]);
+    }
+  }
+
   return (
     <div style={{ display: 'flex', flexDirection: 'row', maxWidth: 1200, margin: '40px auto', fontFamily: 'serif' }}>
       <div>
@@ -112,6 +151,12 @@ function App() {
         inventory={inventory}
         entities={entities}
         onGive={handleGive}
+      />
+      <ExamineDialog
+        open={showExamineDialog}
+        onClose={() => setShowExamineDialog(false)}
+        entities={examineEntities}
+        onExamine={handleExamine}
       />
     </div>
   );

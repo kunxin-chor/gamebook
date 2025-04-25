@@ -73,3 +73,25 @@ export function ifHandler(context, params) {
   }
   return output;
 }
+
+export function abilityCheckHandler(parser, params) {
+  const statName = params.stat ? params.stat.toLowerCase() : 'mnd';
+  const statValue = parser.state[`$character.${statName}`] || 0;
+  const roll = Math.ceil(Math.random() * 20);
+  const margin = statValue - roll;
+  const success = margin >= 0;
+  if (params.marginVar) {
+      parser.state[params.marginVar] = margin;
+  }
+  if (params.successVar) {
+      parser.state[params.successVar] = success;
+  }
+  return {
+    rollMessage: `Ability Check: ${statName.toUpperCase()} ${statValue} vs d20 roll ${roll} → margin: ${margin} (${success ? 'Success' : 'Failure'})`,
+    result: success ? 'success' : 'failure',
+    margin,
+    stat: statName,
+    statValue,
+    roll
+  };
+}
